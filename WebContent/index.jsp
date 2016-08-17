@@ -230,7 +230,7 @@
 						<th rowspan="2" class="w31" width="">和值</th>
 						<td rowspan="2" class="tdbdr "></td>
 						<th rowspan="2" class="w31" width="">跨度</th>
-						<td rowspan="2" class="tdbdr "></td>
+						<td rowspan="2" class=1"tdbdr "></td>
 						<th colspan="11" class="noth ">百位</th>
 						<td class="tdbdr "></td>
 						<th colspan="8" class="noth ">百位形态分布</th>
@@ -285,26 +285,49 @@
 				</thead>
 				<tbody id="data-tab" class="zdww3">
 					<%
-						int left = 210;
+						int left = 204,left2 = left+24*10+3,left3 = left2+24*12+5;
 						double height = 21;
 						double width = 24;
 						int rows = -1; 
+						double banjing = 9;
 						StringBuffer sb = new StringBuffer();
 						StringBuffer sb_daxiao = new StringBuffer();
 						StringBuffer sb_jiou = new StringBuffer();
 						StringBuffer sb_zhihe = new StringBuffer();
 						StringBuffer sb_123 = new StringBuffer();
 						StringBuffer sb_shengpingjiang = new StringBuffer();
-						double preX = 0;
+						StringBuffer sb_z = new StringBuffer();
+						double preI = 0;
+						double preI_z = 0;
 						DbHelper dbHelper = new DbHelper();
 						Connection connection = dbHelper.getConnection();
 						String tableName = "ssc_"+"a";
 						PreparedStatement preparedStatement = connection.prepareStatement("select a.*,b.no,b.sum,b.cross,b.time,b.times from "+tableName+" a,ssc b where a.sscid=b.id order by id asc");
 						ResultSet resultSet = preparedStatement.executeQuery();
 						SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
+						
+						String[] otherStrArray = {"大","小","奇","偶","质","合","0","1","2","升","平","降"};
+						String[] otherFieldArray = {"da","xiao","ji","ou","zhi","he","lu0","lu1","lu2","sheng","ping","jiang"};
+						StringBuffer[] sbs  = {sb_daxiao,sb_daxiao,sb_jiou,sb_jiou,sb_zhihe,sb_zhihe,sb_123,sb_123,sb_123,sb_shengpingjiang,sb_shengpingjiang,sb_shengpingjiang};
+						double[] prei_daxiao = {0};
+						double[] prei_jiou = {0};
+						double[] prei_zhihe = {0};
+						double[] prei_012 = {0};
+						double[] prei_shengpingjiang = {0};
+						double[][] preIs = {prei_daxiao,prei_daxiao,prei_jiou,prei_jiou,prei_zhihe,prei_zhihe,prei_012,prei_012,prei_012,prei_shengpingjiang,prei_shengpingjiang,prei_shengpingjiang};
+						double[] ixsVal = {0,1,0,1,0,1,0,1,2,0,1,2};
+						double[] preIXs = {0,0,2,2,4,4,6,6,6,9,9,9};
+						double[] ixAdd = {0,0,1,1,2,2,3,3,3,4,4,4};
+						String[] zu_daxiao = {"da","xiao"};
+						String[] zu_jiou = {"ji","ou"};
+						String[] zu_zhihe = {"zhi","he"};
+						String[] zu_012 = {"lu0","lu1","lu2"};
+						String[] zu_shengpingjiang = {"sheng","ping","jiang"};
+						String[][] fieldszu = {zu_daxiao,zu_daxiao,zu_jiou,zu_jiou,zu_zhihe,zu_zhihe,zu_012,zu_012,zu_012,zu_shengpingjiang,zu_shengpingjiang,zu_shengpingjiang};
+						String[] otherBallArray = {"17","17","19","19","8","8","2","2","2","17","17","17"};
 						while(resultSet.next()){
 							rows++;
-							double x=0,y=0,x2=0;
+							double mx=0,my=0,x2=0,lx=0,ly=0;
 					%>
 					<tr>
 						<td class="tdbg_1"><%=dateFormat.format(resultSet.getDate("time")) %>-<%=String.format("%03d", resultSet.getInt("times"))  %></td>
@@ -326,33 +349,31 @@
 									hit = " hit=\"\"";
 									valueStr = "<span class=\"ball_5\">"+i+"</span>";
 									
-									x = left + i*width + width/2;
-									x2 = left + i*width + width/2;
-									y = height*rows+height/2;
-									if(preX<x){
-										x-=8;
-									}
+									mx = left + i*width + width/2;
+									lx = left + i*width + width/2;
+									my = height*rows+height/2;
+									ly = height*rows+height/2;
+									lx = lx + ((preI-i)*width)/Math.sqrt(Math.pow(((preI-i)*width),2)+Math.pow(height,2))*banjing;
+									ly = ly - height/Math.sqrt(Math.pow(((preI-i)*width),2)+Math.pow(height,2))*banjing;
 									if(resultSet.next()){
 										for(int j =0;j<10;j++){
 											int valueTmp = resultSet.getInt("n"+j);
 											if(valueTmp == -1){
-												double xTmp = left + j*width + width/2;
-												if(xTmp<x2){
-													x2-=10;
-												}
+												mx = mx + ((j-i)*width)/Math.sqrt(Math.pow(((j-i)*width),2)+Math.pow(height,2))*banjing;
+												my = my + height/Math.sqrt(Math.pow(((j-i)*width),2)+Math.pow(height,2))*banjing;
 											}
 										}
 									}
 									resultSet.previous();
 									if(resultSet.isFirst()){
-										sb.append("M"+x+","+y);
+										sb.append("M"+mx+","+my);
 									}else if(resultSet.isLast()){
-										sb.append("L"+x+","+y);
+										sb.append("L"+lx+","+ly);
 									}else{
-										sb.append("L"+x+","+y);
-										sb.append("M"+x2+","+y);
+										sb.append("L"+lx+","+ly);
+										sb.append("M"+mx+","+my);
 									}
-									preX = x;
+									preI = i;
 								}
 						%>
 							<td class="tdbg_8"<%=hit %>><%=valueStr %></td>
@@ -368,16 +389,6 @@
 						%>
 						<td class="tdbdr"></td>
 						<%
-							String[] otherStrArray = {"大","小","奇","偶","质","合","0","1","2","升","平","降"};
-							String[] otherFieldArray = {"da","xiao","ji","ou","zhi","he","lu0","lu1","lu2","sheng","ping","jiang"};
-							StringBuffer[] sbs  = {sb_daxiao,sb_daxiao,sb_jiou,sb_jiou,sb_zhihe,sb_zhihe,sb_123,sb_123,sb_123,sb_shengpingjiang,sb_shengpingjiang,sb_shengpingjiang};
-							double[] prex_daxiao = {0};
-							double[] prex_jiou = {0};
-							double[] prex_zhihe = {0};
-							double[] prex_012 = {0};
-							double[] prex_shengpingjiang = {0};
-							double[][] prexs = {prex_daxiao,prex_daxiao,prex_jiou,prex_jiou,prex_zhihe,prex_zhihe,prex_012,prex_012,prex_012,prex_shengpingjiang,prex_shengpingjiang,prex_shengpingjiang};
-							String[] otherBallArray = {"17","17","19","19","8","8","2","2","2","17","17","17"};
 							for(int i =0;i<otherStrArray.length;i++){
 								int value = resultSet.getInt(otherFieldArray[i]);
 								String hit = "";
@@ -387,33 +398,42 @@
 									valueStr = "<span class=\"ball_"+otherBallArray[i]+"\">"+otherStrArray[i]+"</span>";
 									
 									
-									x = left + (i+10)*width + width/2;
-									x2 = left + (i+10)*width + width/2;
-									y = height*rows+height/2;
-									if(prexs[i][0]<x){
-										x-=8;
+									mx = left2 + i*width + width/2+ixAdd[i];
+									lx = left2 + i*width + width/2+ixAdd[i];
+									my = height*rows+height/2;
+									ly = height*rows+height/2;
+									lx = lx + ((preIs[i][0]-ixsVal[i])*width)/Math.sqrt(Math.pow(((preIs[i][0]-ixsVal[i])*width),2)+Math.pow(height,2))*banjing;
+									System.out.println((preIs[i][0]-ixsVal[i])+"***"+lx+"**"+otherStrArray[i]);
+									int diffGo=0;
+									if(i >2){
+										diffGo=-2;
 									}
+									if(i >5){
+										diffGo=-3;
+									}
+									if(i >8){
+										diffGo=-4;
+									}
+									ly = ly - height/Math.sqrt(Math.pow(((preIs[i][0]-i)*width),2)+Math.pow(height,2))*banjing +diffGo;
 									if(resultSet.next()){
-										for(int j =0;j<10;j++){
-											int valueTmp = resultSet.getInt("n"+j);
+										for(int j =0;j<fieldszu[i].length;j++){
+											int valueTmp = resultSet.getInt(fieldszu[i][j]);
 											if(valueTmp == -1){
-												double xTmp = left + (j+10)*width + width/2;
-												if(xTmp<x2){
-													x2-=10;
-												}
+												mx = mx + (((j+preIXs[i])-i)*width)/Math.sqrt(Math.pow((((j+preIXs[i])-i)*width),2)+Math.pow(height,2))*banjing;
+												my = my + height/Math.sqrt(Math.pow((((j+preIXs[i])-i)*width),2)+Math.pow(height,2))*banjing;
 											}
 										}
 									}
 									resultSet.previous();
 									if(resultSet.isFirst()){
-										sbs[i].append("M"+x+","+y);
+										sbs[i].append("M"+mx+","+my);
 									}else if(resultSet.isLast()){
-										sbs[i].append("L"+x+","+y);
+										sbs[i].append("L"+lx+","+ly);
 									}else{
-										sbs[i].append("L"+x+","+y);
-										sbs[i].append("M"+x2+","+y);
+										sbs[i].append("L"+lx+","+ly);
+										sbs[i].append("M"+mx+","+my);
 									}
-									prexs[i][0] = x;
+									preIs[i][0] = ixsVal[i];
 								}
 								%>
 								<td class="tdbg_3"<%=hit %>><%=valueStr %></td>
@@ -433,7 +453,34 @@
 								String valueStr = value+"";
 								if(value == -1){
 									hit = " hit=\"\"";
-									valueStr = "<span class=\"ball_14\">"+value+"</span>";
+									valueStr = "<span class=\"ball_14\">"+i+"</span>";
+									
+									mx = left3 + i*width + width/2;
+									lx = left3 + i*width + width/2;
+									my = height*rows+height/2;
+									ly = height*rows+height/2;
+									lx = lx + ((preI_z-i)*width)/Math.sqrt(Math.pow(((preI_z-i)*width),2)+Math.pow(height,2))*banjing;
+									ly = ly - height/Math.sqrt(Math.pow(((preI_z-i)*width),2)+Math.pow(height,2))*banjing;
+									if(resultSet.next()){
+										for(int j =0;j<10;j++){
+											int valueTmp = resultSet.getInt("z"+j);
+											if(valueTmp == -1){
+												mx = mx + ((j-i)*width)/Math.sqrt(Math.pow(((j-i)*width),2)+Math.pow(height,2))*banjing;
+												my = my + height/Math.sqrt(Math.pow(((j-i)*width),2)+Math.pow(height,2))*banjing;
+											}
+										}
+									}
+									resultSet.previous();
+									if(resultSet.isFirst()){
+										sb_z.append("M"+mx+","+my);
+									}else if(resultSet.isLast()){
+										sb_z.append("L"+lx+","+ly);
+									}else{
+										sb_z.append("L"+lx+","+ly);
+										sb_z.append("M"+mx+","+my);
+									}
+									preI_z = i;
+
 								}
 						%>
 							<td class="tdbg_4"<%=hit %>><%=valueStr %></td>
@@ -465,15 +512,17 @@
 
 						<div class="chart-svg" id="chart" style="left: 0px; top: 55px;"><svg height="2000" version="1.1" width="979" xmlns="http://www.w3.org/2000/svg" style="overflow: hidden; position: relative; left: 0px; top: 0px;"><desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Rapha&#235;l 2.1.0</desc><defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></defs>
 						
-						<path fill="none" stroke="#f86300" d="<%=sb.toString() %>"
-						 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						<path fill="none" stroke="#cc0000" d="<%=sb.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
 						 
 						<!-- <path fill="none" stroke="#cc0000" d="M375.88974406875,13.764594172003399L322.1102559312499,29.2354058279966M321.6914503001806,35.93919298579169L352.3085496998194,49.06080701420831M353.9742330529312,59.585046078685195L345.0257669470688,67.4149539213148M345.0257669470688,80.5850460786852L353.9742330529312,88.4149539213148M351.74768479410847,97.21186530442901L274.25231520589153,114.78813469557099M274.3967463528328,118.4333218855827L399.6032536471672,136.5666781144173M399.64728541885916,139.70997525788397L298.3527145811408,157.29002474211603M280.9742330529312,165.5850460786852L272.0257669470688,173.4149539213148M273.66157334902186,184.00818834019708L303.33842665097814,196.99181165980292M321.62269533584464,205.0959040283384L352.37730466415536,218.9040959716616M351.8897440687501,225.7645941720034L298.1102559312499,241.2354058279966M288.5,254L288.5,255M288.5,275L288.5,276M298.3967463528328,287.4333218855827L423.6032536471672,305.5666781144173M423.5643418357721,308.1325620705337L250.4356581642279,327.8674379294663M250.3967463528328,330.4333218855827L375.6032536471672,348.5666781144173M375.5763204801473,351.2331199403367L226.42367951985273,369.7668800596633M226.3967463528328,372.4333218855827L351.6032536471672,390.5666781144173M351.6472854188592,393.7099752578839L250.3527145811408,411.2900247421161M240.5,423L240.5,425M250.27357880408164,437.11592943181154L327.72642119591836,453.88407056818846M345.0257669470688,462.5850460786852L353.9742330529312,470.4149539213148M361.5,487L361.5,488M351.6032536471672,499.4333218855827L226.3967463528328,517.5666781144173M226.4356581642279,520.1325620705337L399.5643418357721,539.8674379294663M399.9,543.8L347.1,559.2M328.3085496998194,565.9391929857917L297.6914503001806,579.0608070142083M298.3967463528328,584.4333218855827L423.6032536471672,602.5666781144173M423.5763204801473,605.2331199403367L274.4236795198527,623.7668800596633"
 						 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path> -->
 						 
-						 <path fill="none" stroke="#008722" d="<%=sb_daxiao.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
-						 <path fill="none" stroke="#f86300" d="<%=sb_jiou.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
-						 
+						 <path fill="none" stroke="#f86300" d="<%=sb_daxiao.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						 <path fill="none" stroke="#2a527f" d="<%=sb_jiou.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						 <path fill="none" stroke="#698353" d="<%=sb_zhihe.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						 <path fill="none" stroke="#008722" d="<%=sb_123.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						 <path fill="none" stroke="#f86300" d="<%=sb_shengpingjiang.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
+						 <path fill="none" stroke="#1e88ee" d="<%=sb_z.toString() %>" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
 						 
 						<!--  <path fill="none" stroke="#f86300" d="M466.02576694706875,17.585046078685195L474.97423305293125,25.414953921314805M474.97423305293125,38.585046078685195L466.02576694706875,46.414953921314805M458.5,63L458.5,64M458.5,84L458.5,85M465.87154140200744,101.75724628517344L475.12845859799256,110.24275371482656M474.97423305293125,123.5850460786852L466.02576694706875,131.4149539213148M466.02576694706875,144.5850460786852L474.97423305293125,152.4149539213148M482.5,169L482.5,170M482.5,190L482.5,191M475.12845859799256,207.75724628517344L465.87154140200744,216.24275371482656M466.02576694706875,229.5850460786852L474.97423305293125,237.4149539213148M482.5,254L482.5,255M482.5,275L482.5,276M474.97423305293125,292.5850460786852L466.02576694706875,300.4149539213148M465.87154140200744,313.75724628517344L475.12845859799256,322.24275371482656M474.97423305293125,335.5850460786852L466.02576694706875,343.4149539213148M466.02576694706875,356.5850460786852L474.97423305293125,364.4149539213148M474.97423305293125,377.5850460786852L466.02576694706875,385.4149539213148M466.02576694706875,398.5850460786852L474.97423305293125,406.4149539213148M482.5,423L482.5,425M474.97423305293125,441.5850460786852L466.02576694706875,449.4149539213148M458.5,466L458.5,467M458.5,487L458.5,488M466.02576694706875,504.5850460786852L474.97423305293125,512.4149539213148M475.12845859799256,525.7572462851734L465.87154140200744,534.2427537148266M458.5,551L458.5,552M466.02576694706875,568.5850460786852L474.97423305293125,576.4149539213148M474.97423305293125,589.5850460786852L466.02576694706875,597.4149539213148M466.02576694706875,610.5850460786852L474.97423305293125,618.4149539213148" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
 						 <path fill="none" stroke="#f86300" d="M687.6615733490219,15.00818834019708L717.3384266509781,27.99181165980292M717.3384266509781,36.00818834019708L687.6615733490219,48.99181165980292M687.6615733490219,57.00818834019708L717.3384266509781,69.99181165980292M717.3384266509781,78.00818834019708L687.6615733490219,90.99181165980292M687.5906482289429,99.16654710493214L717.4093517710571,112.83345289506786M717.3384266509781,121.00818834019708L687.6615733490219,133.99181165980292M687.6615733490219,142.00818834019708L717.3384266509781,154.99181165980292M726.5,169L726.5,170M717.3384266509781,184.00818834019708L687.6615733490219,196.99181165980292M678.5,211L678.5,213M687.6615733490219,227.00818834019708L717.3384266509781,239.99181165980292M718.9742330529313,250.5850460786852L710.0257669470687,258.4149539213148M702.5,275L702.5,276M694.9742330529313,292.5850460786852L686.0257669470687,300.4149539213148M687.5906482289429,311.1665471049321L717.4093517710571,324.8334528950679M717.3384266509781,333.0081883401971L687.6615733490219,345.9918116598029M687.6615733490219,354.0081883401971L717.3384266509781,366.9918116598029M717.3384266509781,375.0081883401971L687.6615733490219,387.9918116598029M687.6615733490219,396.0081883401971L717.3384266509781,408.9918116598029M719.1284585979926,419.75724628517344L709.8715414020074,428.24275371482656M694.9742330529313,441.5850460786852L686.0257669470687,449.4149539213148M678.5,466L678.5,467M686.0257669470687,483.5850460786852L694.9742330529313,491.4149539213148M710.0257669470687,504.5850460786852L718.9742330529313,512.4149539213148M717.4093517710571,523.1665471049321L687.5906482289429,536.8334528950679M687.6615733490219,545.0081883401971L717.3384266509781,557.9918116598029M726.5,572L726.5,573M717.3384266509781,587.0081883401971L687.6615733490219,599.9918116598029M687.6615733490219,608.0081883401971L717.3384266509781,620.9918116598029" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); stroke-linecap: round; stroke-linejoin: round;"></path>
