@@ -217,7 +217,7 @@
 						DbHelper dbHelper = new DbHelper();
 						Connection connection = dbHelper.getConnection();
 						String tableName = "ssc_"+tableArray[tableFix];
-						PreparedStatement preparedStatement = connection.prepareStatement("select a.*,b.no,b.sum,b.cross,b.time,b.times from "+tableName+" a,ssc b where a.sscid=b.id order by id asc limit 0,"+limitCount[limitFix]);
+						PreparedStatement preparedStatement = connection.prepareStatement("select aa.* from (select a.*,b.no,b.sum,b.cross,b.time,b.times from "+tableName+" a,ssc b where a.sscid=b.id order by id desc limit 0,"+limitCount[limitFix]+") aa order by id asc");
 						ResultSet resultSet = preparedStatement.executeQuery();
 						SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
 						StringBuffer sbtmp = new StringBuffer();
